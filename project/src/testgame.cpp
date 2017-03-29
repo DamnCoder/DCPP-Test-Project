@@ -17,8 +17,10 @@
 #include "component/transform.h"
 
 #include <persist/md3/LoadMD3.h>
-
+#include <containers/array.h>
 #include <signals/signal.h>
+
+#include <dir/directory.h>
 
 #include <cstdio>
 #include <cstring>
@@ -119,8 +121,8 @@ namespace dc
 		
 		GameObject* gameObject = new GameObject("EmptyGameObject");
 		
-		gameObject->CreateComponent<Transform>();
-		Transform* transform = gameObject->GetComponent<Transform>();
+		gameObject->CreateComponent<CTransform>();
+		Transform* transform = gameObject->GetComponent<CTransform>();
 		gameObject->RemoveComponent(transform);
 		gameObject->AddComponent(transform);
 		gameObject->DestroyComponent(transform);
@@ -143,11 +145,15 @@ namespace dc
 	{
 		printf("+ Started MD3 loading\n");
 		
+		GetCurrentDir();
+
 		std::string headModelPath = "./assets/model_head.md3";
 		std::string torsoModelPath = "./assets/model_upper.md3";
 		std::string legsModelPath = "./assets/model_lower.md3";
 		
 		CLoadMD3 loadMd3;
+		loadMd3.Load(headModelPath.c_str());
+		/*
 		tModel* modelHead = new tModel();
 		std::memset(modelHead,  0, sizeof(tModel));
 		const bool headLoaded = loadMd3.ImportMD3(modelHead, headModelPath.c_str(), modelHead->scale);
@@ -164,5 +170,6 @@ namespace dc
 		{
 			printf("Problem loading MD3\n");
 		}
+		*/
 	}
 }

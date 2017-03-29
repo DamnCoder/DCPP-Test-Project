@@ -1,2 +1,4 @@
 build
 build_xcode
+build_eclipse
+eclipse_workspace
