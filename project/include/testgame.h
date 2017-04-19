@@ -19,13 +19,14 @@ namespace dc
 {
 	class CTestGameApp : public CApp
 	{
-	public:
+		friend class CSingleton<CApp>;
+	protected:
 		CTestGameApp() {}
 		~CTestGameApp() {}
 
 	public:
-		void Create() override;
-		void Configure() override;
+		void Create()		override;
+		void Configure()	override;
 
 	private:
 		void ExitApp();

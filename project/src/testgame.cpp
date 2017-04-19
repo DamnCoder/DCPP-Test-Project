@@ -9,15 +9,24 @@
 #include "testgame.h"
 
 #include "testhfsm.h"
-#include "subsystem/windowsubsystem.h"
-#include "subsystem/inputsubsystem.h"
-#include "subsystem/scenesubsystem.h"
 
-#include "component/gameobject.h"
-#include "component/transform.h"
+#include <subsystem/windowsubsystem.h>
+#include <subsystem/inputsubsystem.h>
+#include <subsystem/scenesubsystem.h>
+#include <subsystem/rendersubsystem.h>
 
-#include <persist/md3/LoadMD3.h>
+#include <component/gameobject.h>
+#include <component/transform.h>
+#include <component/modelcomponent.h>
+#include <component/renderercomponent.h>
+#include <component/camera.h>
+
+#include <renderer/renderlayermanager.h>
+#include <persist/md3/loadmd3.h>
+
 #include <containers/array.h>
+#include <containers/forwardlist.h>
+
 #include <signals/signal.h>
 
 #include <dir/directory.h>
@@ -50,7 +59,8 @@ namespace dc
 		printf("Adding Scene subsystem\n");
 		Add(new CSceneSubsystem());
 		
-		Load();
+		printf("Adding Render subsystem\n");
+		Add(new CRenderSubsystem());
 	}
 	
 	void CTestGameApp::Configure()
@@ -61,6 +71,9 @@ namespace dc
 		CInputSubsystem* inputSubsystem = GetSubsystem<CInputSubsystem>();
 		auto keyInputManager = inputSubsystem->CreateKeyInputManager();
 		keyInputManager->GetSignal(EKeyState::RELEASE, SDLK_ESCAPE)->Connect(this, &CTestGameApp::ExitApp);
+		
+		Load();
+		
 		/*
 		pressAction = [this, inputSubsystem]()
 		{
@@ -146,13 +159,54 @@ namespace dc
 		printf("+ Started MD3 loading\n");
 		
 		GetCurrentDir();
+		
+		// Layer creation
+		CRenderLayerManager& layerManager = CRenderLayerManager::Instance();
+		layerManager.Add("GUI");
+		
+		printf("LM Count: %d \n", layerManager.Count());
+		printf("LM Default Index: %d \n", layerManager.LayerIndex("Default"));
+		printf("LM GUI Index: %d \n", layerManager.LayerIndex("GUI"));
+		printf("LM OTHER Index: %d \n", layerManager.LayerIndex("OTHER"));
+		printf("LM OTHER Exists: %d \n", layerManager.Exists("OTHER"));
 
+		// Model load
 		std::string headModelPath = "./assets/model_head.md3";
 		std::string torsoModelPath = "./assets/model_upper.md3";
 		std::string legsModelPath = "./assets/model_lower.md3";
 		
 		CLoadMD3 loadMd3;
-		loadMd3.Load(headModelPath.c_str());
+		CArray<CMesh*> meshArray = loadMd3.Load(headModelPath.c_str());
+		
+		// Assign to model
+		CModel* model = new CModel(meshArray);
+		
+		// GameObject creation
+		CGameObject* gameObject = new CGameObject("DrawGameObject", "GUI");
+		
+		CGameObject* cameraGO = new CGameObject("MainCamera", "GUI");
+		
+		// Component addition
+		gameObject->CreateComponent<CTransform>();
+		gameObject->CreateComponent<CModelComponent>();
+		gameObject->CreateComponent<CRendererComponent>();
+		
+		cameraGO->CreateComponent<CTransform>();
+		cameraGO->CreateComponent<CCameraComponent>();
+		
+		// Component configuration
+		gameObject->GetComponent<CModelComponent>()->Model(model);
+		
+		// Scene creation
+		CSceneSubsystem* sceneSubsystem = GetSubsystem<CSceneSubsystem>();
+		sceneSubsystem->CreateScene("TestScene");
+		sceneSubsystem->SetCurrentScene("TestScene");
+		
+		// Adding GO to scene
+		sceneSubsystem->SceneManager()->Scene("TestScene")->Add(gameObject);
+		
+		
+		
 		/*
 		tModel* modelHead = new tModel();
 		std::memset(modelHead,  0, sizeof(tModel));

@@ -14,19 +14,13 @@ using namespace dc;
 
 int main(int argc, const char * argv[])
 {
-	for(int i = 0; i<argc; ++i)
-	{
-		printf("%s\n", argv[i]);
-	}
-
 	printf("Creating app\n");
-	CApp* app = new CTestGameApp();
-
+	CApp* app = CApp::New<CTestGameApp>();
+	
 	printf("Running app\n");
     app->Run();
 
-    delete app;
-    app = 0;
-
+	CApp::Destroy();
+	
     return 0;
 }
