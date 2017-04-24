@@ -10,16 +10,7 @@
 
 #include "testhfsm.h"
 
-#include <subsystem/windowsubsystem.h>
-#include <subsystem/inputsubsystem.h>
-#include <subsystem/scenesubsystem.h>
-#include <subsystem/rendersubsystem.h>
-
-#include <component/gameobject.h>
-#include <component/transform.h>
-#include <component/modelcomponent.h>
-#include <component/renderercomponent.h>
-#include <component/camera.h>
+#include <material/material.h>
 
 #include <renderer/renderlayermanager.h>
 #include <persist/md3/loadmd3.h>
@@ -33,6 +24,9 @@
 
 #include <cstdio>
 #include <cstring>
+
+#include <stdio.h>
+#include <stdlib.h>
 
 namespace dc
 {
@@ -72,80 +66,8 @@ namespace dc
 		auto keyInputManager = inputSubsystem->CreateKeyInputManager();
 		keyInputManager->GetSignal(EKeyState::RELEASE, SDLK_ESCAPE)->Connect(this, &CTestGameApp::ExitApp);
 		
-		Load();
+		ConfigureScene();
 		
-		/*
-		pressAction = [this, inputSubsystem]()
-		{
-			printf("+ Key pressed\n");
-			auto keyInputManager = inputSubsystem->CreateKeyInputManager();
-			keyInputManager->Deregister(EKeyState::RELEASE, releaseToEraseAction);
-		};
-		
-		releaseToEraseAction = []()
-		{
-			printf("+ I'm going to be deleted\n");
-		};
-		
-		releaseAction = []()
-		{
-			printf("+ Key M released\n");
-		};
-		*/
-		
-		//auto mouseInputManager = inputSubsystem->CreateMouseInputManager();
-		
-		/*
-		mouseInputManager->GetSignal(EMouseEvent::MOTION).Connect([](const TMouseEvent& event)
-		{
-			if(event.buttonState == EKeyState::PRESS)
-			{
-				printf("PRESS\n");
-			}
-			else if(event.buttonState == EKeyState::HOLD)
-			{
-				printf("HOLD\n");
-			}
-			else if(event.buttonState == EKeyState::RELEASE)
-			{
-				printf("RELEASE\n");
-			}
-			printf("Mouse coordinates [%d, %d]\n", event.x, event.y);
-		});
-		*/
-		
-		/*
-		mouseInputManager->GetSignal(EMouseEvent::BUTTON_DOWN).Connect([](const TMouseEvent& event)
-		{
-			printf("Button DOWN coordinates [%d, %d]\n", event.x, event.y);
-		});
-		
-		mouseInputManager->GetSignal(EMouseEvent::BUTTON_UP).Connect([](const TMouseEvent& event)
-		{
-			printf("Button UP coordinates [%d, %d]\n", event.x, event.y);
-		});
-		
-		auto connection = keyInputManager->GetSignal(EKeyState::RELEASE)->Connect([]() { printf("+ I'm a lambda\n");});
-		
-		keyInputManager->GetSignal(EKeyState::RELEASE, 'm')->Connect(releaseAction);
-		
-		CSceneSubsystem* sceneSubsystem = GetSubsystem<CSceneSubsystem>();
-		CSceneManager* sceneManager = sceneSubsystem->SceneManager();
-		
-		GameObject* gameObject = new GameObject("EmptyGameObject");
-		
-		gameObject->CreateComponent<CTransform>();
-		Transform* transform = gameObject->GetComponent<CTransform>();
-		gameObject->RemoveComponent(transform);
-		gameObject->AddComponent(transform);
-		gameObject->DestroyComponent(transform);
-		
-		CScene* scene = new CScene("TestScene");
-		scene->Add((gameObject));
-		scene->Remove(gameObject);
-		
-		sceneManager->Add(scene);
-		*/
 	}
 
 	void CTestGameApp::ExitApp()
@@ -154,10 +76,8 @@ namespace dc
 		AskForTermination(true);
 	}
 	
-	void CTestGameApp::Load()
+	void CTestGameApp::ConfigureScene()
 	{
-		printf("+ Started MD3 loading\n");
-		
 		GetCurrentDir();
 		
 		// Layer creation
@@ -169,33 +89,54 @@ namespace dc
 		printf("LM GUI Index: %d \n", layerManager.LayerIndex("GUI"));
 		printf("LM OTHER Index: %d \n", layerManager.LayerIndex("OTHER"));
 		printf("LM OTHER Exists: %d \n", layerManager.Exists("OTHER"));
-
-		// Model load
-		std::string headModelPath = "./assets/model_head.md3";
-		std::string torsoModelPath = "./assets/model_upper.md3";
-		std::string legsModelPath = "./assets/model_lower.md3";
 		
-		CLoadMD3 loadMd3;
-		CArray<CMesh*> meshArray = loadMd3.Load(headModelPath.c_str());
+		CModel* model = LoadModel();
 		
-		// Assign to model
-		CModel* model = new CModel(meshArray);
+		// Creation of material
+		
+		CShader vertexShader = LoadTestVS();
+		CShader fragmentShader = LoadTestFS();
+		
+		CShaderProgram shaderProg;
+		shaderProg.Add(vertexShader);
+		shaderProg.Add(fragmentShader);
+		
+		printf("Compiling shader\n");
+		shaderProg.Compile();
+		printf("Compiling shader done\n");
+		/*
+		int* p=0;
+		CSignal<void(int*)> exampleSig;
+		exampleSig(p);
+		
+		CSignal<void(CShaderProgram)> shaderSignal;
+		shaderSignal(shaderProg);
+		 */
+		//shaderSignal(std::forward<CShaderProgram>(shaderProg));
+		
+		CMaterial* material = new CMaterial("BasicMaterial");
+		CMaterialProperty<CShaderProgram>* shaderProperty = new CMaterialProperty<CShaderProgram>(shaderProg);
+		material->AddProperty("BasicShader", shaderProperty);
+		
 		
 		// GameObject creation
-		CGameObject* gameObject = new CGameObject("DrawGameObject", "GUI");
+		CGameObject* modelGO = new CGameObject("DrawGameObject", "GUI");
 		
+		// Component addition
+		modelGO->CreateComponent<CTransform>();
+		modelGO->CreateComponent<CModelComponent>();
+		modelGO->CreateComponent<CRendererComponent>();
+		
+		// Component configuration
+		modelGO->GetComponent<CRendererComponent>()->AddMaterial(material);
+		modelGO->GetComponent<CModelComponent>()->Model(model);
+		
+		// GameObject creation
 		CGameObject* cameraGO = new CGameObject("MainCamera", "GUI");
 		
 		// Component addition
-		gameObject->CreateComponent<CTransform>();
-		gameObject->CreateComponent<CModelComponent>();
-		gameObject->CreateComponent<CRendererComponent>();
-		
 		cameraGO->CreateComponent<CTransform>();
 		cameraGO->CreateComponent<CCameraComponent>();
-		
-		// Component configuration
-		gameObject->GetComponent<CModelComponent>()->Model(model);
 		
 		// Scene creation
 		CSceneSubsystem* sceneSubsystem = GetSubsystem<CSceneSubsystem>();
@@ -203,27 +144,78 @@ namespace dc
 		sceneSubsystem->SetCurrentScene("TestScene");
 		
 		// Adding GO to scene
-		sceneSubsystem->SceneManager()->Scene("TestScene")->Add(gameObject);
+		CScene* scene = sceneSubsystem->SceneManager()->Scene("TestScene");
+		scene->Add(modelGO);
+		scene->Add(cameraGO);
+	}
+	
+	CModel* CTestGameApp::LoadModel()
+	{
+		printf("+ Started MD3 loading\n");
 		
+		// Model load
+		std::string headModelPath = "./assets/model_head.md3";
+		std::string torsoModelPath = "./assets/model_upper.md3";
+		std::string legsModelPath = "./assets/model_lower.md3";
 		
+		// Creation of model
+		CLoadMD3 loadMd3;
+		CArray<CMesh*> meshArray = loadMd3.Load(headModelPath.c_str());
+		return new CModel(meshArray);
+	}
+	
+	CShader CTestGameApp::LoadTestVS()
+	{
+		const char* filePath = "./assets/StandardShading.vertexshader";
+		return LoadShader(filePath, EShaderType::VERTEX_SHADER);
+	}
+	
+	CShader CTestGameApp::LoadTestFS()
+	{
+		const char* filePath = "./assets/StandardShading.fragmentshader";
+		return LoadShader(filePath, EShaderType::FRAGMENT_SHADER);
+	}
+	
+	CShader CTestGameApp::LoadShader(const char* filePath, const EShaderType type)
+	{
+		FILE* fp = fopen(filePath, "r");
 		
-		/*
-		tModel* modelHead = new tModel();
-		std::memset(modelHead,  0, sizeof(tModel));
-		const bool headLoaded = loadMd3.ImportMD3(modelHead, headModelPath.c_str(), modelHead->scale);
-		
-		tModel* modelTorso = new tModel();
-		std::memset(modelTorso,  0, sizeof(tModel));
-		const bool torsoLoaded = loadMd3.ImportMD3(modelTorso, torsoModelPath.c_str(), modelTorso->scale);
-		
-		tModel* modelLegs = new tModel();
-		std::memset(modelLegs,  0, sizeof(tModel));
-		const bool legsLoaded = loadMd3.ImportMD3(modelLegs, legsModelPath.c_str(), modelLegs->scale);
-		
-		if(!headLoaded || !torsoLoaded || !legsLoaded)
+		if(!fp)
 		{
-			printf("Problem loading MD3\n");
+			printf("File not found: %s!\n", filePath);
+			return 0;
 		}
-		*/
+		long lSize;
+		
+		fseek( fp , 0L , SEEK_END);
+		lSize = ftell( fp );
+		rewind( fp );
+		
+		/* allocate memory for entire content */
+		char* buffer = (char*) malloc(lSize * sizeof(char));
+		if( !buffer )
+		{
+			fclose(fp);
+			fputs("memory alloc fails", stderr);
+			exit(1);
+		}
+		
+		/* copy the file into the buffer */
+		if(fread( buffer , lSize, 1 , fp) != 1)
+		{
+			fclose(fp);
+			free(buffer);
+			fputs("entire read fails", stderr);
+			exit(1);
+		}
+		
+		/* do your work here, buffer is a string contains the whole text */
+		CShader shader(type);
+		shader.Create(buffer);
+		
+		fclose(fp);
+		free(buffer);
+		
+		return shader;
 	}
 }

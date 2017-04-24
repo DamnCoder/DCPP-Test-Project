@@ -11,7 +11,20 @@
 
 #include "app.h"
 
-#include <map>
+#include <subsystem/windowsubsystem.h>
+#include <subsystem/inputsubsystem.h>
+#include <subsystem/scenesubsystem.h>
+#include <subsystem/rendersubsystem.h>
+
+#include <component/gameobject.h>
+#include <component/transform.h>
+#include <component/modelcomponent.h>
+#include <component/renderercomponent.h>
+#include <component/camera.h>
+
+#include <mesh/model.h>
+#include <material/shader.h>
+
 #include <signals/signal.h>
 #include <help/callbacks.h>
 
@@ -31,7 +44,14 @@ namespace dc
 	private:
 		void ExitApp();
 		
-		void Load();
+		void ConfigureScene();
+		
+		CModel* LoadModel();
+		
+		CShader LoadTestVS();
+		CShader LoadTestFS();
+		
+		CShader LoadShader(const char* filePath, const EShaderType type);
 		
 		TAction pressAction;
 		TAction releaseAction;
