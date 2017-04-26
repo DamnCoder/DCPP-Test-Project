@@ -13,7 +13,8 @@
 #include <material/material.h>
 
 #include <renderer/renderlayermanager.h>
-#include <persist/md3/loadmd3.h>
+#include <persist/md3/md3loader.h>
+#include <persist/obj/objloader.h>
 
 #include <containers/array.h>
 #include <containers/forwardlist.h>
@@ -79,64 +80,47 @@ namespace dc
 	void CTestGameApp::ConfigureScene()
 	{
 		GetCurrentDir();
+		/*
+		 int* p=0;
+		 CSignal<void(int*)> exampleSig;
+		 exampleSig(p);
+		 
+		 CSignal<void(CShaderProgram)> shaderSignal;
+		 shaderSignal(shaderProg);
+		 */
+		//shaderSignal(std::forward<CShaderProgram>(shaderProg));
 		
+		//
+
 		// Layer creation
 		CRenderLayerManager& layerManager = CRenderLayerManager::Instance();
 		layerManager.Add("GUI");
 		
-		printf("LM Count: %d \n", layerManager.Count());
-		printf("LM Default Index: %d \n", layerManager.LayerIndex("Default"));
-		printf("LM GUI Index: %d \n", layerManager.LayerIndex("GUI"));
-		printf("LM OTHER Index: %d \n", layerManager.LayerIndex("OTHER"));
-		printf("LM OTHER Exists: %d \n", layerManager.Exists("OTHER"));
+		PrintRenderLayerInfo(layerManager);
 		
-		CModel* model = LoadModel();
+		// Model creation
+		CModel* model = CreateModel();
 		
-		// Creation of material
-		
-		CShader vertexShader = LoadTestVS();
-		CShader fragmentShader = LoadTestFS();
-		
-		CShaderProgram shaderProg;
-		shaderProg.Add(vertexShader);
-		shaderProg.Add(fragmentShader);
-		
-		printf("Compiling shader\n");
-		shaderProg.Compile();
-		printf("Compiling shader done\n");
-		/*
-		int* p=0;
-		CSignal<void(int*)> exampleSig;
-		exampleSig(p);
-		
-		CSignal<void(CShaderProgram)> shaderSignal;
-		shaderSignal(shaderProg);
-		 */
-		//shaderSignal(std::forward<CShaderProgram>(shaderProg));
-		
-		CMaterial* material = new CMaterial("BasicMaterial");
-		CMaterialProperty<CShaderProgram>* shaderProperty = new CMaterialProperty<CShaderProgram>(shaderProg);
-		material->AddProperty("BasicShader", shaderProperty);
-		
-		
-		// GameObject creation
+		// Drawable GameObject creation
 		CGameObject* modelGO = new CGameObject("DrawGameObject", "GUI");
 		
 		// Component addition
-		modelGO->CreateComponent<CTransform>();
-		modelGO->CreateComponent<CModelComponent>();
-		modelGO->CreateComponent<CRendererComponent>();
+		modelGO->AddComponent<CTransform>();
+		modelGO->AddComponent<CModelComponent>();
+		modelGO->AddComponent<CRendererComponent>();
 		
 		// Component configuration
-		modelGO->GetComponent<CRendererComponent>()->AddMaterial(material);
 		modelGO->GetComponent<CModelComponent>()->Model(model);
 		
-		// GameObject creation
+		// Camera GameObject creation
 		CGameObject* cameraGO = new CGameObject("MainCamera", "GUI");
 		
 		// Component addition
-		cameraGO->CreateComponent<CTransform>();
-		cameraGO->CreateComponent<CCameraComponent>();
+		cameraGO->AddComponent<CTransform>();
+		cameraGO->AddComponent<CCameraComponent>();
+		
+		// Component configuration
+		cameraGO->GetComponent<CCameraComponent>()->BackgroundColor(math::ColorRGBf::Green());
 		
 		// Scene creation
 		CSceneSubsystem* sceneSubsystem = GetSubsystem<CSceneSubsystem>();
@@ -149,7 +133,7 @@ namespace dc
 		scene->Add(cameraGO);
 	}
 	
-	CModel* CTestGameApp::LoadModel()
+	CModel* CTestGameApp::CreateModel()
 	{
 		printf("+ Started MD3 loading\n");
 		
@@ -158,10 +142,43 @@ namespace dc
 		std::string torsoModelPath = "./assets/model_upper.md3";
 		std::string legsModelPath = "./assets/model_lower.md3";
 		
+		const char* cubePath = "./assets/cube.obj";
+		
+		CObjLoader objLoader;
+		objLoader.Load(cubePath);
+		
 		// Creation of model
-		CLoadMD3 loadMd3;
-		CArray<CMesh*> meshArray = loadMd3.Load(headModelPath.c_str());
-		return new CModel(meshArray);
+		CMD3Loader md3Loader;
+		CArray<CMesh*> meshArray = md3Loader.Load(headModelPath.c_str());
+		
+		// Material creation
+		CMaterial* material = CreateMaterial();
+		
+		CModel* model = new CModel();
+		for(CMesh* mesh : meshArray)
+		{
+			model->Add(material, mesh);
+		}
+		return model;
+	}
+	
+	CMaterial* CTestGameApp::CreateMaterial()
+	{
+		printf("Creating a Material\n");
+		CShader vertexShader = LoadTestVS();
+		CShader fragmentShader = LoadTestFS();
+		
+		CShaderProgram shaderProg;
+		shaderProg.Add(vertexShader);
+		shaderProg.Add(fragmentShader);
+		
+		shaderProg.Compile();
+		
+		CMaterial* material = new CMaterial("BasicMaterial");
+		material->AddProperty<CShaderProgram>("ShaderProgram", shaderProg);
+		
+		printf("Material created!\n");
+		return material;
 	}
 	
 	CShader CTestGameApp::LoadTestVS()
@@ -217,5 +234,14 @@ namespace dc
 		free(buffer);
 		
 		return shader;
+	}
+	
+	void CTestGameApp::PrintRenderLayerInfo(const CRenderLayerManager& layerManager)
+	{
+		printf("LM Count: %d \n", layerManager.Count());
+		printf("LM Default Index: %d \n", layerManager.LayerIndex("Default"));
+		printf("LM GUI Index: %d \n", layerManager.LayerIndex("GUI"));
+		printf("LM OTHER Index: %d \n", layerManager.LayerIndex("OTHER"));
+		printf("LM OTHER Exists: %s \n", layerManager.Exists("OTHER") ? "true" : "false");
 	}
 }

@@ -46,13 +46,17 @@ namespace dc
 		
 		void ConfigureScene();
 		
-		CModel* LoadModel();
+		CModel* CreateModel();
 		
+		CMaterial*	CreateMaterial();
 		CShader LoadTestVS();
 		CShader LoadTestFS();
 		
 		CShader LoadShader(const char* filePath, const EShaderType type);
 		
+		void PrintRenderLayerInfo(const CRenderLayerManager& layerManager);
+		
+	private:
 		TAction pressAction;
 		TAction releaseAction;
 		TAction releaseToEraseAction;
