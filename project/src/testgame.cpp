@@ -11,10 +11,14 @@
 #include "testhfsm.h"
 
 #include <material/material.h>
+#include <material/texturemanager.h>
 
 #include <renderer/renderlayermanager.h>
+
 #include <persist/md3/md3loader.h>
 #include <persist/obj/objloader.h>
+#include <persist/shader/shaderloader.h>
+#include <persist/texture/textureloader.h>
 
 #include <containers/array.h>
 #include <containers/forwardlist.h>
@@ -22,6 +26,8 @@
 #include <signals/signal.h>
 
 #include <dir/directory.h>
+
+#include <math/vector.h>
 
 #include <cstdio>
 #include <cstring>
@@ -68,7 +74,6 @@ namespace dc
 		keyInputManager->GetSignal(EKeyState::RELEASE, SDLK_ESCAPE)->Connect(this, &CTestGameApp::ExitApp);
 		
 		ConfigureScene();
-		
 	}
 
 	void CTestGameApp::ExitApp()
@@ -80,17 +85,6 @@ namespace dc
 	void CTestGameApp::ConfigureScene()
 	{
 		GetCurrentDir();
-		/*
-		 int* p=0;
-		 CSignal<void(int*)> exampleSig;
-		 exampleSig(p);
-		 
-		 CSignal<void(CShaderProgram)> shaderSignal;
-		 shaderSignal(shaderProg);
-		 */
-		//shaderSignal(std::forward<CShaderProgram>(shaderProg));
-		
-		//
 
 		// Layer creation
 		CRenderLayerManager& layerManager = CRenderLayerManager::Instance();
@@ -111,6 +105,7 @@ namespace dc
 		
 		// Component configuration
 		modelGO->GetComponent<CModelComponent>()->Model(model);
+		modelGO->GetComponent<CTransform>()->Translate(math::Vector3f(0.f, 0.f, 2.f));
 		
 		// Camera GameObject creation
 		CGameObject* cameraGO = new CGameObject("MainCamera", "GUI");
@@ -120,7 +115,21 @@ namespace dc
 		cameraGO->AddComponent<CCameraComponent>();
 		
 		// Component configuration
-		cameraGO->GetComponent<CCameraComponent>()->BackgroundColor(math::ColorRGBf::Green());
+		//cameraGO->GetComponent<CTransform>()->Translate(math::Vector3f(0.f, 0.f, -1.0f));
+		
+		math::Vector3f eye = math::Vector3f(0.f, 0.f, -1.0f);
+		math::Vector3f direction = math::Vector3f::Forward();
+		math::Vector3f up = math::Vector3f::Up();
+		
+		CCameraComponent* camera = cameraGO->GetComponent<CCameraComponent>();
+		camera->BackgroundColor(math::ColorRGBf::Blue());
+		
+		math::Matrix4x4f projectionMatrix = math::Matrix4x4f::Perspective(90.f, SCR_WIDTH/(float)SCR_HEIGHT, 0.01f, 100.f);
+		printf("Projection Matrix\n");
+		PrintMatrix(projectionMatrix);
+		camera->ProjectionMatrix(projectionMatrix);
+		camera->ViewMatrix(math::Matrix4x4f::LookAt(eye, eye+direction, up));
+		//camera->Configure(90.f, SCR_WIDTH/SCR_HEIGHT, 0.01f, 100.f);
 		
 		// Scene creation
 		CSceneSubsystem* sceneSubsystem = GetSubsystem<CSceneSubsystem>();
@@ -131,26 +140,27 @@ namespace dc
 		CScene* scene = sceneSubsystem->SceneManager()->Scene("TestScene");
 		scene->Add(modelGO);
 		scene->Add(cameraGO);
+		
+		// Enable depth test
+		glEnable(GL_DEPTH_TEST);
+		
+		// Accept fragment if it closer to the camera than the former one
+		glDepthFunc(GL_LESS);
+		
+		// Cull triangles which normal is not towards the camera
+		//glEnable(GL_CULL_FACE);
 	}
 	
 	CModel* CTestGameApp::CreateModel()
 	{
-		printf("+ Started MD3 loading\n");
+		printf("+ Started Obj loading\n");
 		
-		// Model load
-		std::string headModelPath = "./assets/model_head.md3";
-		std::string torsoModelPath = "./assets/model_upper.md3";
-		std::string legsModelPath = "./assets/model_lower.md3";
-		
-		const char* cubePath = "./assets/cube.obj";
-		
-		CObjLoader objLoader;
-		objLoader.Load(cubePath);
+		const char* cubePath = "./assets/plane.obj";
 		
 		// Creation of model
-		CMD3Loader md3Loader;
-		CArray<CMesh*> meshArray = md3Loader.Load(headModelPath.c_str());
-		
+		CObjLoader objLoader;
+		CArray<CMesh*> meshArray = objLoader.Load(cubePath);
+
 		// Material creation
 		CMaterial* material = CreateMaterial();
 		
@@ -164,78 +174,43 @@ namespace dc
 	
 	CMaterial* CTestGameApp::CreateMaterial()
 	{
-		printf("Creating a Material\n");
-		CShader vertexShader = LoadTestVS();
-		CShader fragmentShader = LoadTestFS();
+		printf("Loading shaders\n");
+		
+		CShaderLoader shaderLoader;
+		CShader vertexShader = shaderLoader.Load("./assets/mvp_tex.vert", EShaderType::VERTEX_SHADER);
+		CShader fragmentShader = shaderLoader.Load("./assets/textured.frag", EShaderType::FRAGMENT_SHADER);
 		
 		CShaderProgram shaderProg;
+		shaderProg.Create();
+		
 		shaderProg.Add(vertexShader);
 		shaderProg.Add(fragmentShader);
 		
 		shaderProg.Compile();
 		
+		shaderProg.AttachAll();
+		
+		shaderProg.Link();
+		
+		shaderProg.CreateUniform("MVP");
+		shaderProg.CreateUniform("TextureSampler");
+		
+		printf("Loading texture\n");
+		
+		CTextureLoader textureLoader;
+		CTexture texture = textureLoader.Load("./assets/uvtemplate01.jpg");
+		
+		m_textureManager.Add("uvtemplate01", texture);
+		
+		printf("Creating a Material\n");
 		CMaterial* material = new CMaterial("BasicMaterial");
-		material->AddProperty<CShaderProgram>("ShaderProgram", shaderProg);
+		material->AddProperty<CShaderProgram>("ShaderProgram", shaderProg, Activate, Deactivate);
+		material->AddProperty<CTexture>("Texture", texture, Activate, Deactivate);
 		
 		printf("Material created!\n");
 		return material;
 	}
-	
-	CShader CTestGameApp::LoadTestVS()
-	{
-		const char* filePath = "./assets/StandardShading.vertexshader";
-		return LoadShader(filePath, EShaderType::VERTEX_SHADER);
-	}
-	
-	CShader CTestGameApp::LoadTestFS()
-	{
-		const char* filePath = "./assets/StandardShading.fragmentshader";
-		return LoadShader(filePath, EShaderType::FRAGMENT_SHADER);
-	}
-	
-	CShader CTestGameApp::LoadShader(const char* filePath, const EShaderType type)
-	{
-		FILE* fp = fopen(filePath, "r");
-		
-		if(!fp)
-		{
-			printf("File not found: %s!\n", filePath);
-			return 0;
-		}
-		long lSize;
-		
-		fseek( fp , 0L , SEEK_END);
-		lSize = ftell( fp );
-		rewind( fp );
-		
-		/* allocate memory for entire content */
-		char* buffer = (char*) malloc(lSize * sizeof(char));
-		if( !buffer )
-		{
-			fclose(fp);
-			fputs("memory alloc fails", stderr);
-			exit(1);
-		}
-		
-		/* copy the file into the buffer */
-		if(fread( buffer , lSize, 1 , fp) != 1)
-		{
-			fclose(fp);
-			free(buffer);
-			fputs("entire read fails", stderr);
-			exit(1);
-		}
-		
-		/* do your work here, buffer is a string contains the whole text */
-		CShader shader(type);
-		shader.Create(buffer);
-		
-		fclose(fp);
-		free(buffer);
-		
-		return shader;
-	}
-	
+
 	void CTestGameApp::PrintRenderLayerInfo(const CRenderLayerManager& layerManager)
 	{
 		printf("LM Count: %d \n", layerManager.Count());

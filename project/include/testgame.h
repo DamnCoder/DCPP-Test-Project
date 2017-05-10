@@ -23,7 +23,9 @@
 #include <component/camera.h>
 
 #include <mesh/model.h>
+
 #include <material/shader.h>
+#include <material/texturemanager.h>
 
 #include <signals/signal.h>
 #include <help/callbacks.h>
@@ -49,14 +51,12 @@ namespace dc
 		CModel* CreateModel();
 		
 		CMaterial*	CreateMaterial();
-		CShader LoadTestVS();
-		CShader LoadTestFS();
-		
-		CShader LoadShader(const char* filePath, const EShaderType type);
 		
 		void PrintRenderLayerInfo(const CRenderLayerManager& layerManager);
 		
 	private:
+		TTextureManager	m_textureManager;
+		
 		TAction pressAction;
 		TAction releaseAction;
 		TAction releaseToEraseAction;
