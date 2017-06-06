@@ -27,6 +27,8 @@
 #include <material/shader.h>
 #include <material/texturemanager.h>
 
+#include <persist/assets/assetloader.h>
+
 #include <signals/signal.h>
 #include <help/callbacks.h>
 
@@ -55,6 +57,8 @@ namespace dc
 		void PrintRenderLayerInfo(const CRenderLayerManager& layerManager);
 		
 	private:
+		CAssetManager	m_assetManager;
+		CAssetLoader	m_assetLoader;
 		TTextureManager	m_textureManager;
 		
 		TAction pressAction;

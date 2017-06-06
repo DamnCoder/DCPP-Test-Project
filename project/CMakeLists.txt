@@ -43,6 +43,8 @@ INCLUDE_DIRECTORIES(${EXTERNALS_PATH}/dcpp/project/include)
 
 INCLUDE_DIRECTORIES(${EXTERNALS_PATH}/dcpp/externals/dcpp_signals/project/include)
 INCLUDE_DIRECTORIES(${EXTERNALS_PATH}/dcpp/externals/dcpp_math/project/include)
+INCLUDE_DIRECTORIES(${EXTERNALS_PATH}/dcpp/externals/stb_image/project/include)
+INCLUDE_DIRECTORIES(${EXTERNALS_PATH}/dcpp/externals/rapidjson/project/include)
 
 ADD_DEPENDENCIES(${PROJECT_NAME} DCPP)
 

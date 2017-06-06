@@ -19,6 +19,7 @@
 #include <persist/obj/objloader.h>
 #include <persist/shader/shaderloader.h>
 #include <persist/texture/textureloader.h>
+#include <persist/assets/assetloader.h>
 
 #include <containers/array.h>
 #include <containers/forwardlist.h>
@@ -73,6 +74,9 @@ namespace dc
 		auto keyInputManager = inputSubsystem->CreateKeyInputManager();
 		keyInputManager->GetSignal(EKeyState::RELEASE, SDLK_ESCAPE)->Connect(this, &CTestGameApp::ExitApp);
 		
+		printf("Asset Loader\n");
+		m_assetLoader.Load("./assets/asset_config.json", m_assetManager);
+		
 		ConfigureScene();
 	}
 
@@ -105,7 +109,7 @@ namespace dc
 		
 		// Component configuration
 		modelGO->GetComponent<CModelComponent>()->Model(model);
-		modelGO->GetComponent<CTransform>()->Translate(math::Vector3f(0.f, 0.f, 2.f));
+		modelGO->GetComponent<CTransform>()->Translate(math::Vector3f(0.f, 0.f, 0.f));
 		
 		// Camera GameObject creation
 		CGameObject* cameraGO = new CGameObject("MainCamera", "GUI");
@@ -155,7 +159,7 @@ namespace dc
 	{
 		printf("+ Started Obj loading\n");
 		
-		const char* cubePath = "./assets/plane.obj";
+		const char* cubePath = "./assets/mesh/plane2.obj";
 		
 		// Creation of model
 		CObjLoader objLoader;
@@ -177,8 +181,8 @@ namespace dc
 		printf("Loading shaders\n");
 		
 		CShaderLoader shaderLoader;
-		CShader vertexShader = shaderLoader.Load("./assets/mvp_tex.vert", EShaderType::VERTEX_SHADER);
-		CShader fragmentShader = shaderLoader.Load("./assets/textured.frag", EShaderType::FRAGMENT_SHADER);
+		CShader vertexShader = shaderLoader.Load("./assets/shader/mvp_tex.vert", EShaderType::VERTEX_SHADER);
+		CShader fragmentShader = shaderLoader.Load("./assets/shader/textured.frag", EShaderType::FRAGMENT_SHADER);
 		
 		CShaderProgram shaderProg;
 		shaderProg.Create();
@@ -190,7 +194,7 @@ namespace dc
 		
 		shaderProg.AttachAll();
 		
-		shaderProg.Link();
+		shaderProg.Link(CRenderer::Instance().VertexProperties());
 		
 		shaderProg.CreateUniform("MVP");
 		shaderProg.CreateUniform("TextureSampler");
@@ -198,14 +202,14 @@ namespace dc
 		printf("Loading texture\n");
 		
 		CTextureLoader textureLoader;
-		CTexture texture = textureLoader.Load("./assets/uvtemplate01.jpg");
+		CTexture* texture = textureLoader.Load("./assets/texture/uvtemplate01.jpg");
 		
 		m_textureManager.Add("uvtemplate01", texture);
 		
 		printf("Creating a Material\n");
 		CMaterial* material = new CMaterial("BasicMaterial");
 		material->AddProperty<CShaderProgram>("ShaderProgram", shaderProg, Activate, Deactivate);
-		material->AddProperty<CTexture>("Texture", texture, Activate, Deactivate);
+		material->AddProperty<CTexture>("Texture", *texture, Activate, Deactivate);
 		
 		printf("Material created!\n");
 		return material;

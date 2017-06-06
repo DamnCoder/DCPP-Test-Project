@@ -1,0 +1,40 @@
+{
+    "folder": "assets",
+
+    "texture":
+    {
+        "folder": "texture",
+        "assets":
+        {
+            "uvtemplate01.jpg":     "JPEG",
+            "uvtemplate02.jpg":     "JPEG",
+            "chico_refugio.jpg":    "JPEG"
+        }
+    },
+
+    "shader":
+    {
+        "folder": "shader",
+        "assets":
+        {
+            "m_v_p.vert":       "VERTEX",
+            "mvp_tex.vert":     "VERTEX",
+            "mvp.vert":         "VERTEX",
+            "test.frag":        "FRAGMENT",
+            "textured.frag":    "FRAGMENT"
+        }
+    },
+
+    "mesh":
+    {
+        "folder": "mesh",
+        "assets":
+        {
+            "cube.obj":     "OBJ",
+            "plane.obj":    "OBJ",
+            "plane2.obj":   "OBJ",
+            "suzanne.obj":  "OBJ"
+            
+        }
+    }
+}
