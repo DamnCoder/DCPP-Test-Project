@@ -181,8 +181,9 @@ namespace dc
 		printf("Loading shaders\n");
 		
 		CShaderLoader shaderLoader;
-		CShader vertexShader = shaderLoader.Load("./assets/shader/mvp_tex.vert", EShaderType::VERTEX_SHADER);
-		CShader fragmentShader = shaderLoader.Load("./assets/shader/textured.frag", EShaderType::FRAGMENT_SHADER);
+		
+		CShader* vertexShader = shaderLoader.Load("./assets/shader/mvp_tex.vert", EShaderType::VERTEX_SHADER);
+		CShader* fragmentShader = shaderLoader.Load("./assets/shader/textured.frag", EShaderType::FRAGMENT_SHADER);
 		
 		CShaderProgram shaderProg;
 		shaderProg.Create();
