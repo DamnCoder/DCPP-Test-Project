@@ -59,7 +59,6 @@ namespace dc
 	private:
 		CAssetManager	m_assetManager;
 		CAssetLoader	m_assetLoader;
-		TTextureManager	m_textureManager;
 		
 		TAction pressAction;
 		TAction releaseAction;

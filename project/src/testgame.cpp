@@ -36,6 +36,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <pathie.hpp>
+
 namespace dc
 {
 	const char*			HELLO_SCREEN = "Hello Screen";
@@ -76,6 +78,9 @@ namespace dc
 		
 		printf("Asset Loader\n");
 		m_assetLoader.Load("./assets/asset_config.json", m_assetManager);
+		
+		Pathie::Path exepath = Pathie::Path::exe();
+		printf("PATHIE: Run path %s\n", exepath.str().c_str());
 		
 		ConfigureScene();
 	}
@@ -157,22 +162,15 @@ namespace dc
 	
 	CModel* CTestGameApp::CreateModel()
 	{
-		printf("+ Started Obj loading\n");
-		
-		const char* cubePath = "./assets/mesh/plane2.obj";
-		
 		// Creation of model
-		CObjLoader objLoader;
-		CArray<CMesh*> meshArray = objLoader.Load(cubePath);
-
+		CModel* model = new CModel();
+		CMesh* mesh = m_assetManager.MeshManager().GetPtr("plane2.obj");
+		
 		// Material creation
 		CMaterial* material = CreateMaterial();
 		
-		CModel* model = new CModel();
-		for(CMesh* mesh : meshArray)
-		{
-			model->Add(material, mesh);
-		}
+		model->Add(material, mesh);
+		
 		return model;
 	}
 	
@@ -182,8 +180,8 @@ namespace dc
 		
 		CShaderLoader shaderLoader;
 		
-		CShader* vertexShader = shaderLoader.Load("./assets/shader/mvp_tex.vert", EShaderType::VERTEX_SHADER);
-		CShader* fragmentShader = shaderLoader.Load("./assets/shader/textured.frag", EShaderType::FRAGMENT_SHADER);
+		CShader* vertexShader = m_assetManager.ShaderManager().GetPtr("mvp_tex.vert");
+		CShader* fragmentShader = m_assetManager.ShaderManager().GetPtr("textured.frag");
 		
 		CShaderProgram shaderProg;
 		shaderProg.Create();
@@ -202,10 +200,8 @@ namespace dc
 		
 		printf("Loading texture\n");
 		
-		CTextureLoader textureLoader;
-		CTexture* texture = textureLoader.Load("./assets/texture/uvtemplate01.jpg");
-		
-		m_textureManager.Add("uvtemplate01", texture);
+		//CTextureLoader textureLoader;
+		CTexture* texture = m_assetManager.TextureManager().GetPtr("uvtemplate01.jpg");
 		
 		printf("Creating a Material\n");
 		CMaterial* material = new CMaterial("BasicMaterial");

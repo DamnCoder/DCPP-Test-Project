@@ -18,6 +18,13 @@ SET(CMAKE_CXX_STANDARD 11) # C++11...
 SET(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
 SET(CMAKE_CXX_EXTENSIONS OFF) #...without compiler extensions like gnu++11
 
+if(APPLE)
+  set(CMAKE_MACOSX_RPATH 1)
+  set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS} -flat_namespace -undefined dynamic_lookup")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -undefined dynamic_lookup")
+endif(APPLE)
+
 #[PRJ_INCLUDE]
 INCLUDE_DIRECTORIES(include)
 
@@ -44,11 +51,13 @@ INCLUDE_DIRECTORIES(${EXTERNALS_PATH}/dcpp/externals/dcpp_signals/project/includ
 INCLUDE_DIRECTORIES(${EXTERNALS_PATH}/dcpp/externals/dcpp_math/project/include)
 INCLUDE_DIRECTORIES(${EXTERNALS_PATH}/dcpp/externals/stb_image/project/include)
 INCLUDE_DIRECTORIES(${EXTERNALS_PATH}/dcpp/externals/rapidjson/project/include)
+INCLUDE_DIRECTORIES(${EXTERNALS_PATH}/dcpp/externals/pathie/include)
 
 ADD_DEPENDENCIES(${PROJECT_NAME} DCPP)
 
 TARGET_LINK_LIBRARIES(${PROJECT_NAME}
 	DCPP
+	pathie-dynamic
 )
  
 # Set the location for executable installation
