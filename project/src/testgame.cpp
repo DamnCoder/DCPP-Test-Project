@@ -48,6 +48,9 @@ namespace dc
 
 	void CTestGameApp::Create()
 	{
+		printf("Adding Time subsystem\n");
+		Add(new CTimeSubsystem());
+		
 		printf("Adding HFSM subsystem\n");
 		Add(new CTestHFSM());
 

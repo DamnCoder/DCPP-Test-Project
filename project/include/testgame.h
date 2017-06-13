@@ -15,6 +15,7 @@
 #include <subsystem/inputsubsystem.h>
 #include <subsystem/scenesubsystem.h>
 #include <subsystem/rendersubsystem.h>
+#include <subsystem/timesubsystem.h>
 
 #include <component/gameobject.h>
 #include <component/transform.h>
