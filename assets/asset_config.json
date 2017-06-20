@@ -8,7 +8,7 @@
         {
             "uvtemplate01.jpg":     "JPEG",
             "uvtemplate02.jpg":     "JPEG",
-            "chico_refugio.jpg":    "JPEG"
+            "vault_boy.jpg":    "JPEG"
         }
     },
 
@@ -35,6 +35,14 @@
             "plane2.obj":   "OBJ",
             "suzanne.obj":  "OBJ"
             
+        }
+    },
+
+    "md3":
+    {
+        "vault_boy":
+        {
+            "path": "./assets/vault_boy"
         }
     }
 }

@@ -53,7 +53,7 @@ namespace dc
 		
 		CModel* CreateModel();
 		
-		CMaterial*	CreateMaterial();
+		CMaterial*	CreateBasicMaterial();
 		
 		void PrintRenderLayerInfo(const CRenderLayerManager& layerManager);
 		

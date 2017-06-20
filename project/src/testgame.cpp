@@ -12,6 +12,7 @@
 
 #include <material/material.h>
 #include <material/texturemanager.h>
+#include <material/materialmanager.h>
 
 #include <renderer/renderlayermanager.h>
 
@@ -111,23 +112,21 @@ namespace dc
 		CGameObject* modelGO = new CGameObject("DrawGameObject", "GUI");
 		
 		// Component addition
-		modelGO->AddComponent<CTransform>();
 		modelGO->AddComponent<CModelComponent>();
 		modelGO->AddComponent<CRendererComponent>();
 		
 		// Component configuration
 		modelGO->GetComponent<CModelComponent>()->Model(model);
-		modelGO->GetComponent<CTransform>()->Translate(math::Vector3f(0.f, 0.f, 0.f));
+		modelGO->Transform()->Translate(math::Vector3f(0.f, 0.f, 0.f));
 		
 		// Camera GameObject creation
 		CGameObject* cameraGO = new CGameObject("MainCamera", "GUI");
 		
 		// Component addition
-		cameraGO->AddComponent<CTransform>();
 		cameraGO->AddComponent<CCameraComponent>();
 		
 		// Component configuration
-		//cameraGO->GetComponent<CTransform>()->Translate(math::Vector3f(0.f, 0.f, -1.0f));
+		//cameraGO->Transform()->Translate(math::Vector3f(0.f, 0.f, -1.0f));
 		
 		math::Vector3f eye = math::Vector3f(0.f, 0.f, -1.0f);
 		math::Vector3f direction = math::Vector3f::Forward();
@@ -141,16 +140,19 @@ namespace dc
 		PrintMatrix(projectionMatrix);
 		camera->ProjectionMatrix(projectionMatrix);
 		camera->ViewMatrix(math::Matrix4x4f::LookAt(eye, eye+direction, up));
-		//camera->Configure(90.f, SCR_WIDTH/SCR_HEIGHT, 0.01f, 100.f);
 		
 		// Scene creation
 		CSceneSubsystem* sceneSubsystem = GetSubsystem<CSceneSubsystem>();
 		sceneSubsystem->CreateScene("TestScene");
 		sceneSubsystem->SetCurrentScene("TestScene");
 		
+		CGameObject* vaultBoyGO = m_assetManager.GameObjectManager().Get("vault_boy");
+		vaultBoyGO->Transform()->Translate(math::Vector3f(0.f, 0.f, 1.0f));
+		
 		// Adding GO to scene
 		CScene* scene = sceneSubsystem->SceneManager()->Scene("TestScene");
-		scene->Add(modelGO);
+		//scene->Add(modelGO);
+		scene->Add(vaultBoyGO);
 		scene->Add(cameraGO);
 		
 		// Enable depth test
@@ -167,49 +169,33 @@ namespace dc
 	{
 		// Creation of model
 		CModel* model = new CModel();
-		CMesh* mesh = m_assetManager.MeshManager().GetPtr("plane2.obj");
+		CMesh* mesh = m_assetManager.MeshManager().Get("plane2.obj");
 		
 		// Material creation
-		CMaterial* material = CreateMaterial();
+		CMaterial* material = CreateBasicMaterial();
 		
 		model->Add(material, mesh);
 		
 		return model;
 	}
 	
-	CMaterial* CTestGameApp::CreateMaterial()
+	CMaterial* CTestGameApp::CreateBasicMaterial()
 	{
 		printf("Loading shaders\n");
 		
-		CShaderLoader shaderLoader;
+		CShader* vertexShader = m_assetManager.ShaderManager().Get("mvp_tex.vert");
+		CShader* fragmentShader = m_assetManager.ShaderManager().Get("textured.frag");
 		
-		CShader* vertexShader = m_assetManager.ShaderManager().GetPtr("mvp_tex.vert");
-		CShader* fragmentShader = m_assetManager.ShaderManager().GetPtr("textured.frag");
-		
-		CShaderProgram shaderProg;
-		shaderProg.Create();
-		
-		shaderProg.Add(vertexShader);
-		shaderProg.Add(fragmentShader);
-		
-		shaderProg.Compile();
-		
-		shaderProg.AttachAll();
-		
-		shaderProg.Link(CRenderer::Instance().VertexProperties());
-		
-		shaderProg.CreateUniform("MVP");
-		shaderProg.CreateUniform("TextureSampler");
+		CShaderProgram* shaderProg = CShaderProgram::Create(vertexShader, fragmentShader);
 		
 		printf("Loading texture\n");
 		
-		//CTextureLoader textureLoader;
-		CTexture* texture = m_assetManager.TextureManager().GetPtr("uvtemplate01.jpg");
+		CTexture* texture = m_assetManager.TextureManager().Get("uvtemplate01.jpg");
 		
 		printf("Creating a Material\n");
 		CMaterial* material = new CMaterial("BasicMaterial");
-		material->AddProperty<CShaderProgram>("ShaderProgram", shaderProg, Activate, Deactivate);
-		material->AddProperty<CTexture>("Texture", *texture, Activate, Deactivate);
+		material->AddProperty<CShaderProgram>("ShaderProgram", shaderProg);
+		material->AddProperty<CTexture>("Texture", texture);
 		
 		printf("Material created!\n");
 		return material;
