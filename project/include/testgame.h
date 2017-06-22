@@ -23,6 +23,8 @@
 #include <component/renderercomponent.h>
 #include <component/camera.h>
 
+#include "logic/logictest.h"
+
 #include <mesh/model.h>
 
 #include <material/shader.h>
@@ -53,7 +55,7 @@ namespace dc
 		
 		CModel* CreateModel();
 		
-		CMaterial*	CreateBasicMaterial();
+		CMaterial* CreateBasicMaterial();
 		
 		void PrintRenderLayerInfo(const CRenderLayerManager& layerManager);
 		

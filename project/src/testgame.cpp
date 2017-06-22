@@ -42,8 +42,8 @@
 namespace dc
 {
 	const char*			HELLO_SCREEN = "Hello Screen";
-	const unsigned int	SCR_WIDTH = 640;
-	const unsigned int 	SCR_HEIGHT = 480;
+	const unsigned int	SCR_WIDTH = 1024;
+	const unsigned int 	SCR_HEIGHT = 768;
 	const unsigned int	SCR_BPP = 16;
 	const bool			SCR_FULLSCREEN = false;
 
@@ -117,7 +117,7 @@ namespace dc
 		
 		// Component configuration
 		modelGO->GetComponent<CModelComponent>()->Model(model);
-		modelGO->Transform()->Translate(math::Vector3f(0.f, 0.f, 0.f));
+		modelGO->Transform()->Position(math::Vector3f(0.f, 0.f, 0.f));
 		
 		// Camera GameObject creation
 		CGameObject* cameraGO = new CGameObject("MainCamera", "GUI");
@@ -126,18 +126,15 @@ namespace dc
 		cameraGO->AddComponent<CCameraComponent>();
 		
 		// Component configuration
-		//cameraGO->Transform()->Translate(math::Vector3f(0.f, 0.f, -1.0f));
-		
-		math::Vector3f eye = math::Vector3f(0.f, 0.f, -1.0f);
-		math::Vector3f direction = math::Vector3f::Forward();
-		math::Vector3f up = math::Vector3f::Up();
-		
 		CCameraComponent* camera = cameraGO->GetComponent<CCameraComponent>();
 		camera->BackgroundColor(math::ColorRGBf::Blue());
 		
+		math::Vector3f eye = math::Vector3f::Back() * 2.f;;
+		math::Vector3f direction = math::Vector3f::Front();
+		math::Vector3f up = math::Vector3f::Up();
+		
 		math::Matrix4x4f projectionMatrix = math::Matrix4x4f::Perspective(90.f, SCR_WIDTH/(float)SCR_HEIGHT, 0.01f, 100.f);
-		printf("Projection Matrix\n");
-		PrintMatrix(projectionMatrix);
+		
 		camera->ProjectionMatrix(projectionMatrix);
 		camera->ViewMatrix(math::Matrix4x4f::LookAt(eye, eye+direction, up));
 		
@@ -147,7 +144,12 @@ namespace dc
 		sceneSubsystem->SetCurrentScene("TestScene");
 		
 		CGameObject* vaultBoyGO = m_assetManager.GameObjectManager().Get("vault_boy");
-		vaultBoyGO->Transform()->Translate(math::Vector3f(0.f, 0.f, 1.0f));
+		vaultBoyGO->AddComponent<CLogicTest>();
+		vaultBoyGO->Transform()->Position(math::Vector3f(0.f, 0.f, 0.0f));
+		math::Vector3f scale (0.5f, 0.5f, 0.5f);
+		vaultBoyGO->Transform()->Scale(scale);
+		
+		PrintLocalMatrix(vaultBoyGO->Transform());
 		
 		// Adding GO to scene
 		CScene* scene = sceneSubsystem->SceneManager()->Scene("TestScene");

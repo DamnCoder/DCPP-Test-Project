@@ -27,18 +27,21 @@ endif(APPLE)
 
 #[PRJ_INCLUDE]
 INCLUDE_DIRECTORIES(include)
+INCLUDE_DIRECTORIES(include/logic)
 
 #[PRJ_SOURCE_FILES]
 SET(SOURCES
 	src/main.cpp
 	src/testgame.cpp
 	src/testhfsm.cpp
+	src/logic/logictest.cpp
 )
 
 #[PRJ_HEADER_FILES]
 SET(HEADERS
 	include/testgame.h
 	include/testhfsm.h
+	include/logic/logictest.h
 )
 
 # Generate the executable from the sources
