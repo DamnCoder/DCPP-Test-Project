@@ -27,8 +27,6 @@
 
 #include <signals/signal.h>
 
-#include <dir/directory.h>
-
 #include <math/vector.h>
 
 #include <cstdio>
@@ -97,39 +95,21 @@ namespace dc
 	
 	void CTestGameApp::ConfigureScene()
 	{
-		GetCurrentDir();
-
 		// Layer creation
 		CRenderLayerManager& layerManager = CRenderLayerManager::Instance();
 		layerManager.Add("GUI");
 		
 		PrintRenderLayerInfo(layerManager);
 		
-		// Model creation
-		CModel* model = CreateModel();
-		
-		// Drawable GameObject creation
-		CGameObject* modelGO = new CGameObject("DrawGameObject", "GUI");
-		
-		// Component addition
-		modelGO->AddComponent<CModelComponent>();
-		modelGO->AddComponent<CRendererComponent>();
-		
-		// Component configuration
-		modelGO->GetComponent<CModelComponent>()->Model(model);
-		modelGO->Transform()->Position(math::Vector3f(0.f, 0.f, 0.f));
-		
-		// Camera GameObject creation
+		// Camera creation
 		CGameObject* cameraGO = new CGameObject("MainCamera", "GUI");
 		
-		// Component addition
 		cameraGO->AddComponent<CCameraComponent>();
-		
-		// Component configuration
+
 		CCameraComponent* camera = cameraGO->GetComponent<CCameraComponent>();
 		camera->BackgroundColor(math::ColorRGBf::Blue());
 		
-		math::Vector3f eye = math::Vector3f::Back() * 2.f;;
+		math::Vector3f eye = math::Vector3f(0.f, 3.f, 5.f);
 		math::Vector3f direction = math::Vector3f::Front();
 		math::Vector3f up = math::Vector3f::Up();
 		
@@ -138,23 +118,37 @@ namespace dc
 		camera->ProjectionMatrix(projectionMatrix);
 		camera->ViewMatrix(math::Matrix4x4f::LookAt(eye, eye+direction, up));
 		
+		// OBJ Game Object
+		CModel* model = CreateModel();
+		
+		CGameObject* modelGO = new CGameObject("DrawGameObject", "GUI");
+		
+		modelGO->AddComponent<CModelComponent>();
+		modelGO->AddComponent<CRendererComponent>();
+		
+		modelGO->GetComponent<CModelComponent>()->Model(model);
+		modelGO->Transform()->Position(math::Vector3f(-2.f, 0.f, 0.f));
+		
+		// MD3 Game Object
+		CGameObject* vaultBoyGO = m_assetManager.GameObjectManager().Get("vault_boy");
+		vaultBoyGO->AddComponent<CLogicTest>();
+		vaultBoyGO->Transform()->Position(math::Vector3f(2.f, 0.f, -1.0f));
+		
+		// MD5 Game Object
+		CGameObject* soldierGO = m_assetManager.GameObjectManager().Get("player");
+		soldierGO->AddComponent<CLogicTest>();
+		soldierGO->Transform()->Position(math::Vector3f(0.f, 0.f, 0.0f));
+		
 		// Scene creation
 		CSceneSubsystem* sceneSubsystem = GetSubsystem<CSceneSubsystem>();
 		sceneSubsystem->CreateScene("TestScene");
 		sceneSubsystem->SetCurrentScene("TestScene");
-		
-		CGameObject* vaultBoyGO = m_assetManager.GameObjectManager().Get("vault_boy");
-		vaultBoyGO->AddComponent<CLogicTest>();
-		vaultBoyGO->Transform()->Position(math::Vector3f(0.f, 0.f, 0.0f));
-		math::Vector3f scale (0.5f, 0.5f, 0.5f);
-		vaultBoyGO->Transform()->Scale(scale);
-		
-		PrintLocalMatrix(vaultBoyGO->Transform());
-		
+
 		// Adding GO to scene
 		CScene* scene = sceneSubsystem->SceneManager()->Scene("TestScene");
 		//scene->Add(modelGO);
-		scene->Add(vaultBoyGO);
+		//scene->Add(vaultBoyGO);
+		scene->Add(soldierGO);
 		scene->Add(cameraGO);
 		
 		// Enable depth test

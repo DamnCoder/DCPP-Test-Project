@@ -30,7 +30,7 @@ class CLogicTest : public CComponent
 	// ===========================================================
 	RTTI_DECLARATIONS(CLogicTest, CComponent)
 private:
-	const float MOVE_SPEED = 5.f;
+	const float MOVE_SPEED = 50.f;
 	const float ROTATION_SPEED = 50.f;
 	// ===========================================================
 	// Static fields / methods
@@ -77,8 +77,14 @@ private:
 	void Up();
 	void Down();
 	
+	void Forward();
+	void Backward();
+	
 	void RotateXPos();
 	void RotateXNeg();
+	
+	void RotateYPos();
+	void RotateYNeg();
 	
 	void Move(const math::Vector3f& direction, const float speed);
 	void Rotate(const math::Vector3f& direction, const float speed);

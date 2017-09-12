@@ -35,6 +35,12 @@ namespace dc
 		keyInputManager->GetSignal(EKeyState::PRESS, SDLK_DOWN)->Connect(this, &CLogicTest::Down);
 		keyInputManager->GetSignal(EKeyState::HOLD, SDLK_DOWN)->Connect(this, &CLogicTest::Down);
 		
+		keyInputManager->GetSignal(EKeyState::PRESS, '+')->Connect(this, &CLogicTest::Forward);
+		keyInputManager->GetSignal(EKeyState::HOLD, '+')->Connect(this, &CLogicTest::Forward);
+		
+		keyInputManager->GetSignal(EKeyState::PRESS, '`')->Connect(this, &CLogicTest::Backward);
+		keyInputManager->GetSignal(EKeyState::HOLD, '`')->Connect(this, &CLogicTest::Backward);
+		
 		keyInputManager->GetSignal(EKeyState::PRESS, 'a')->Connect(this, &CLogicTest::RotateXPos);
 		keyInputManager->GetSignal(EKeyState::HOLD, 'a')->Connect(this, &CLogicTest::RotateXPos);
 		
@@ -92,6 +98,16 @@ namespace dc
 		Move(math::Vector3f::Down(), MOVE_SPEED);
 	}
 	
+	void CLogicTest::Forward()
+	{
+		Move(math::Vector3f::Front(), MOVE_SPEED);
+	}
+	
+	void CLogicTest::Backward()
+	{
+		Move(math::Vector3f::Back(), MOVE_SPEED);
+	}
+	
 	void CLogicTest::Move(const math::Vector3f& direction, const float speed)
 	{
 		const float dt = CTimeSubsystem::Timer().DT();
@@ -109,6 +125,18 @@ namespace dc
 	}
 	
 	void CLogicTest::RotateXNeg()
+	{
+		//Rotate(math::Vector3f::Right(), ROTATION_SPEED);
+		Rotate(-1.f, ROTATION_SPEED);
+	}
+	
+	void CLogicTest::RotateYPos()
+	{
+		//Rotate(math::Vector3f::Left(), ROTATION_SPEED);
+		Rotate(1.f, ROTATION_SPEED);
+	}
+	
+	void CLogicTest::RotateYNeg()
 	{
 		//Rotate(math::Vector3f::Right(), ROTATION_SPEED);
 		Rotate(-1.f, ROTATION_SPEED);
@@ -132,7 +160,7 @@ namespace dc
 
 		rotationX += direction * speed * dt;
 		
-		math::Quaternionf rotation = math::Quaternionf::FromEulerRad(math::DegToRad(rotationX), 0.f, 0.f);
+		math::Quaternionf rotation = math::Quaternionf::FromEulerRad(0.f, math::DegToRad(rotationX), 0.f);
 		
 		mp_transform->Rotation(rotation);
 

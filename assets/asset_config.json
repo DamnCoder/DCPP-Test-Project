@@ -44,5 +44,13 @@
         {
             "path": "./assets/vault_boy"
         }
+    },
+
+    "md5":
+    {
+        "player":
+        {
+            "path": "./assets/player"
+        }
     }
 }
